@@ -1,0 +1,1 @@
+One on many solutions around funniest problems of the website http://projecteuler.net/
