@@ -38,12 +38,6 @@ namespace Solutions.Problem10
             return total.ToString();
         }
 
-        public string ProblemId
-        {
-            get { return "Problem 10 solution 1"; }
-        }
-
-
         private void AddPrime(long value)
         {
             primes[primesIndex] = value;
