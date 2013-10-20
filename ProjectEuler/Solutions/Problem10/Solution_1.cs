@@ -1,53 +1,38 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Runtime;
 namespace Solutions.Problem10
 {
     public class Solution_1 : ISolution
     {
-        const string PROBLEM_NUMBER = "Problem 10 solution 1";
         const long TARGET = 2000000;
-
-        List<long> primes = new List<long>();
-        List<long> primesSQRT = new List<long>();
+        long[] primes = new long[2000000];
+        long primesIndex = 0;
+        long sqrtIndex = 0;
+        long total;
 
         public string Execute()
-        {                      
-            long total = 2;
-            int primesSQRTsize = 1;
-            primes.Add(2);
-            primesSQRT.Add(2);
-            int sqrtIndex = 1;
+        {
+            AddPrime(2);
+            AddPrime(3);
+            AddPrime(5);
+            AddPrime(7);
 
-            long numberCandidateToBePrime = 3;
-
-            while (numberCandidateToBePrime < TARGET)
+            for (int numberCandidateToBePrime = 10; numberCandidateToBePrime < TARGET; numberCandidateToBePrime += 10)
             {
-                long sqrt = (long)Math.Sqrt(numberCandidateToBePrime) + 1;
+                IsPrime(numberCandidateToBePrime + 1);
+                IsPrime(numberCandidateToBePrime + 3);
+                IsPrime(numberCandidateToBePrime + 7);
+                IsPrime(numberCandidateToBePrime + 9);
+            }
 
-                if (IsPrime(numberCandidateToBePrime))
-                {
-                    primes.Add(numberCandidateToBePrime);
-                    total += numberCandidateToBePrime;
-                }
-
-                while (sqrtIndex < sqrt)
-                {
-                    primesSQRT.Add(primes[sqrtIndex]);
-                    primesSQRTsize++;
-                    sqrtIndex++;
-                }
-
-                if (numberCandidateToBePrime > 10 && numberCandidateToBePrime % 10 == 3)
-                {
-                    numberCandidateToBePrime += 4;
-                }
-                else
-                {
-                    numberCandidateToBePrime += 2;
-                }
+            if (total != 142913828922)
+            {
+                throw new Exception("invalid result");
             }
 
             return total.ToString();
@@ -55,31 +40,43 @@ namespace Solutions.Problem10
 
         public string ProblemId
         {
-            get { return PROBLEM_NUMBER; }
+            get { return "Problem 10 solution 1"; }
+        }
+
+
+        private void AddPrime(long value)
+        {
+            primes[primesIndex] = value;
+            primesIndex++;
+            total += value;
         }
 
         private bool IsPrime(long numberCandidateToBePrime)
         {
             bool isPrime = true;
+            int nbProcessor = Environment.ProcessorCount;
+            long sqrt = (long)Math.Sqrt((double)numberCandidateToBePrime) + 1;
 
-            Parallel.ForEach(primesSQRT, (prime, state) =>
+            while (sqrtIndex < primesIndex && primes[sqrtIndex] < sqrt)
             {
+                sqrtIndex++;
+            }
+
+            Parallel.For(0, sqrtIndex, (i, state) =>
+            {
+                if (numberCandidateToBePrime % primes[i] == 0)
                 {
-                    if (IsFactor(numberCandidateToBePrime, prime))
-                    {
-                        isPrime = false;
-                        state.Break();
-                    }
+                    isPrime = false;
+                    state.Break();
                 }
             });
 
-            return isPrime;
-        }
+            if (isPrime)
+            {
+                AddPrime(numberCandidateToBePrime);
+            }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool IsFactor(long value, long factor)
-        {
-            return factor * (value / factor) == value;
+            return isPrime;
         }
     }
 }

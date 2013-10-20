@@ -2,7 +2,7 @@
 using System.Diagnostics;
 namespace Solutions
 {
-    public class Class1
+    public class program
     {
         public static void Process(ISolution solution)
         {
