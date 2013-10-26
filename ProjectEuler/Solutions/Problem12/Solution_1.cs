@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Solutions.Problem12
 {
     /*
-     * Attention: this is not an optimised solution !!!
+     * Warning: this is not an optimised solution !!!
      * It could take several minutes
      */
     public class Solution_1 : ISolution
