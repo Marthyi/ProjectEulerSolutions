@@ -21,7 +21,7 @@ namespace Solutions
 
         public static void Main()
         {
-            ISolution solution = new Problem12.Solution_1();
+            ISolution solution = new Problem10.Solution1();
 
             Process(solution);
 

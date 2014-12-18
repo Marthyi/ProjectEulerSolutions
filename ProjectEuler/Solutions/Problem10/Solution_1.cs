@@ -1,76 +1,105 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using System.Runtime;
-namespace Solutions.Problem10
+﻿namespace Solutions.Problem10
 {
-    public class Solution_1 : ISolution
-    {
-        const long TARGET = 2000000;
-        long[] primes = new long[2000000];
-        long primesIndex = 0;
-        long sqrtIndex = 0;
-        long total;
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
 
+    public class Solution1 : ISolution
+    {        
+        private const long Target = 2000000;
+        private bool shouldContinue = true;
+        readonly List<long> primes = new List<long>();
+        readonly ConcurrentQueue<long> primesToAdd = new ConcurrentQueue<long>();
+        BlockingCollection<long> numberToEvaluate = new BlockingCollection<long>();
+        
         public string Execute()
         {
-            AddPrime(2);
-            AddPrime(3);
-            AddPrime(5);
-            AddPrime(7);
+            primes.Add(2);
 
-            for (int numberCandidateToBePrime = 10; numberCandidateToBePrime < TARGET; numberCandidateToBePrime += 10)
+            while (shouldContinue)
             {
-                IsPrime(numberCandidateToBePrime + 1);
-                IsPrime(numberCandidateToBePrime + 3);
-                IsPrime(numberCandidateToBePrime + 7);
-                IsPrime(numberCandidateToBePrime + 9);
+                long maxPrime = primes.Max(p => p);
+                long maxCarre = maxPrime * maxPrime;
+
+                EvaluateRange(maxPrime + 1, maxCarre);
+                PrimeAdder();
             }
+
+            long total = primes.Sum();
 
             if (total != 142913828922)
             {
-                throw new Exception("invalid result");
+                Console.WriteLine("Expected: \t142913828922");
+                Console.WriteLine("Result  : \t" + total);
             }
 
-            return total.ToString();
+            return total.ToString(CultureInfo.InvariantCulture);
         }
 
-        private void AddPrime(long value)
+        private void NumberEvaluator()
         {
-            primes[primesIndex] = value;
-            primesIndex++;
-            total += value;
-        }
-
-        private bool IsPrime(long numberCandidateToBePrime)
-        {
-            bool isPrime = true;
-            int nbProcessor = Environment.ProcessorCount;
-            long sqrt = (long)Math.Sqrt((double)numberCandidateToBePrime) + 1;
-
-            while (sqrtIndex < primesIndex && primes[sqrtIndex] < sqrt)
+            foreach (var number in numberToEvaluate.GetConsumingEnumerable())
             {
-                sqrtIndex++;
-            }
-
-            Parallel.For(0, sqrtIndex, (i, state) =>
-            {
-                if (numberCandidateToBePrime % primes[i] == 0)
+                if (IsPrime(number))
                 {
-                    isPrime = false;
-                    state.Break();
-                }
-            });
+                    this.primesToAdd.Enqueue(number);
 
-            if (isPrime)
+                }
+            }
+        }
+
+        private void PrimeAdder()
+        {
+            while (!primesToAdd.IsEmpty)
             {
-                AddPrime(numberCandidateToBePrime);
+                long prime;
+                primesToAdd.TryDequeue(out prime);
+                if (prime < Target)
+                {
+                    primes.Add(prime);
+                }
+                else
+                {
+                    shouldContinue = false;
+                }
+            }
+        }
+
+        private void EvaluateRange(long min, long max)
+        {
+            numberToEvaluate = new BlockingCollection<long>();
+
+            Task[] tasks = { 
+                            Task.Factory.StartNew(this.NumberEvaluator),Task.Factory.StartNew(this.NumberEvaluator),
+                            Task.Factory.StartNew(this.NumberEvaluator),Task.Factory.StartNew(this.NumberEvaluator)
+                            };
+
+            for (long i = min; i < max; i++)
+            {
+                numberToEvaluate.Add(i);
+            }
+            numberToEvaluate.CompleteAdding();
+
+            Task.WaitAll(tasks);
+        }
+        
+        private bool IsPrime(long number)
+        {
+            long squareOfNumberCandidate = (long)Math.Sqrt(number) + 1;
+
+            foreach (var prime in primes.Where(p => p <= squareOfNumberCandidate))
+            {
+                if (number % prime == 0)
+                {
+                    return false;
+                }
             }
 
-            return isPrime;
+            return true;
         }
     }
 }
