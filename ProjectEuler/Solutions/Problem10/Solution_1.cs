@@ -15,21 +15,28 @@
         readonly List<long> primes = new List<long>();
         readonly ConcurrentQueue<long> primesToAdd = new ConcurrentQueue<long>();
         BlockingCollection<long> numberToEvaluate = new BlockingCollection<long>();
+
+        private long total = 2;
+
         
         public string Execute()
         {
             primes.Add(2);
+            long minValue = 2+1;
 
             while (shouldContinue)
             {
-                long maxPrime = primes.Max(p => p);
-                long maxCarre = maxPrime * maxPrime;
+                long maxCarre = minValue * minValue;
+                if (maxCarre > Target)
+                {
+                    maxCarre = Target;
+                    shouldContinue = false;
+                }
 
-                EvaluateRange(maxPrime + 1, maxCarre);
+                EvaluateRange(minValue, maxCarre);
                 PrimeAdder();
+                minValue = maxCarre+1;
             }
-
-            long total = primes.Sum();
 
             if (total != 142913828922)
             {
@@ -61,6 +68,7 @@
                 if (prime < Target)
                 {
                     primes.Add(prime);
+                    total += prime;
                 }
                 else
                 {
