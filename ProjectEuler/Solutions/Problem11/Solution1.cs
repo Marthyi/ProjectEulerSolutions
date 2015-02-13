@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Solutions.Problem11
 {
-    public class Solution_1 : ISolution
+    public class Solution1 : ISolution
     {
         private int[,] matrix = new int[20,20];
         private int maxValue = 0;

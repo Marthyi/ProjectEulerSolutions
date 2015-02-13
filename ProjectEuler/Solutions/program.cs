@@ -2,15 +2,14 @@
 using System.Diagnostics;
 namespace Solutions
 {
-    public class program
+    public static class Program
     {
-        public static void Process(ISolution solution)
+        private static void Process(ISolution solution)
         {
-            Stopwatch sw = new Stopwatch();
-            string result;           
-
-            sw.Start();            
-            result = solution.Execute();
+            var sw = new Stopwatch();
+            
+            sw.Start();
+            string result = solution.Execute();
             sw.Stop();
             
             Console.WriteLine("Time:{0}min  {1}sec. {2}ms", sw.Elapsed.Minutes, sw.Elapsed.Seconds, sw.Elapsed.Milliseconds);
